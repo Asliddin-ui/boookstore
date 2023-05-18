@@ -1,38 +1,28 @@
-# from django.conf import settings
-# from telegram import Update
-# from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-
-# async def hello(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-#     await update.message.reply_text(f'Hello {update.effective_user.first_name}')
-
-
-# app = ApplicationBuilder().token(settings.TELEGRAM_BOT_TOKEN).build()
-
-# app.add_handler(CommandHandler("hello", hello))
-
-# app.run_polling()
-
-
-
-
-
-
 #!/usr/bin/env python
 # pylint: disable=unused-argument, wrong-import-position
 # This program is dedicated to the public domain under the CC0 license.
 
 """
-Basic example for a bot that works with polls. Only 3 people are allowed to interact with each
-poll/quiz the bot generates. The preview command generates a closed poll/quiz, exactly like the
-one the user sends the bot
-"""
+Don't forget to enable inline mode with @BotFather
 
+First, a few handler functions are defined. Then, those functions are passed to
+the Application and registered at their respective places.
+Then, the bot is started and runs until we press Ctrl-C on the command line.
+
+Usage:
+Basic inline bot example. Applies different text transformations.
+Press Ctrl-C on the command line or send a signal to the process to stop the
+bot.
+"""
+import logging
 from django.conf import settings
 from django.core.management import BaseCommand
-
-import logging
-
-from telegram import __version__ as TG_VER
+from asgiref.sync import sync_to_async
+from bookstore.models import Books
+from users.models import Users
+from django.utils.translation import gettext_lazy as _
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle, InputTextMessageContent, Update, __version__ as TG_VER
+from telegram.ext import Application, CommandHandler, ContextTypes, InlineQueryHandler, MessageHandler, filters
 
 try:
     from telegram import __version_info__
@@ -45,24 +35,7 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
         f"{TG_VER} version of this example, "
         f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
     )
-from telegram import (
-    KeyboardButton,
-    KeyboardButtonPollType,
-    Poll,
-    ReplyKeyboardMarkup,
-    ReplyKeyboardRemove,
-    Update,
-)
-from telegram.constants import ParseMode
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    PollAnswerHandler,
-    PollHandler,
-    filters,
-)
+
 
 # Enable logging
 logging.basicConfig(
@@ -71,149 +44,114 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-TOTAL_VOTER_COUNT = 3
+STATE = 'state'
+STATE_REGISTRATION = 'registration'
+STATE_LANGUAGE = 'language'
+STATE_ADD = 'book-add'
+STATE_ADD_NAME = 'book-add-name'
+STATE_ADD_CONTENT = 'book-add-content'
+STATE_ADD_PHOTO = 'book-add-photo'
+STATE_ADD_PRICE = 'book-add-price'
+STATE_ADD_STATUS = 'book-add-status'
+STATE_ADD_PUBLISH_YEAR = 'book-add-publish_year'
+STATE_ADD_COUNTRY = 'book-add-country'
+STATE_ADD_CATEGORY = 'book-add-category'
+STATE_ADD_LANGUAGE = 'book-add-language'
+STATE_ADD_AUTHOR = 'book-add-author'
+STATE_SAVE = "book-save"
+
+ADD_QUESTIONS = {"hi": _("Salom botimizga xush kelibsiz!\nKitob qo'shish uchun /add buyrugini kiriting")
+                ,"name":_("Kitob nomini kiriting!"), "content":_("Kitobga ta'rif bering!"),
+                  "photo":_("Kitob rasmini jo'nating!"), "photo1":_("Kitob rasmini kiritasizmi?"),
+                  "price":_("Kitob narxini kiriting!"), "status":_("Kitobning statusini tanlang!"),
+                  "publish_year":_("Kitob chop qilingan yilni kiriting!"), "publish_year1":_("Chop qilingan yili bormi?"),
+                  "category":_("Kitob kategoriyasi?"), "language":_("Kitob chop qilingan til?"),
+                  "country":_("Chop qilingan davlati?"), "author":_("Kitob aftorini tanlang!"),
+                  "author1":_("Yana Avtor qo'shasizmi?"), "save_agr":_("Ma'lumotlarni saqlaysizmi?"), "save": _("📁 Ma'lumotlarni saqlash"),
+                  "data_success":_("Ma'lumotlarni muvofaqiyatli to'ldirdingiz!\nMalumotlarni saqlash uchun pastdagi tugmani bosing!"),
+                 "success": _('Muvofaqiyatli!'), "choose_lang": _("Kerakli tilni tanlang!")
+                }
+PERM = {"nostart": _("Hurmatli foydalanuvchi oldin /start buyrug'ini kiriiting"),"common_format_err":_("Hurmatli foydalanuvchi siz noto'g'ri formatda"
+                            " ma'lumot kirityapsiz iltimos malumotni to'g'ri kiriting"),
+        "min_price_err":_("Kitob narxining eng kichik qiymati: 1000\n"
+                        "Iltimos kattaroq summa kiriting!"),
+        "price_type_err":_("Iltimos harf va belgi aralashtirmasdan\n"
+                        "Faqat son kiriting! Misol uchun: 23500"),
+        "year_type_err":_("Iltimos harf va belgi aralashtirmasdan\nFaqat raqamlar kiriting!"),
+        "year_format_err":_("Iltimos yil YYYY formatda kiriting\nMisol uchun: \n2020"),
+        "max_year_err":_("Siz kiritgan yil hozirgi yildan katta bo'lmasligi kerak!\nIltimos qayta urining"),
+        "yes": _("Ha"), "no": _("Yo'q"), "nstat": _('Yangi'), "pstat": _('Qabul qilingan'), "rstat": _('Inkor qilingan')
+        }
+BOOK = {"common": _("Kotob ma'lumotlari"), "name": _("Kitob nomi"),
+            "content": _("Kitob ta'rifi"), "price": _("Kitob narxi"),
+            "status": _("Kitob statusi raqami"), "publish_year": _("Kitob chop qilingan yili"),
+            "category": _("Kitob kategoriya"), "language": _("Kitob chiqarilgan til"),
+            "country": _("Kitob chiqarilgan davlat"), "authors": _("Kitob aftorlari"),
+            "uagr": _("Ko'rsatilgan ma'lumotlarni saqlaysizmi?"), "success_save": _("😅 Ma'lumot muvofaqiyatli saqlandi!\nYana qo'shishni hohlasangiz\n/add komondasini ustiga bosing!"),
+        "success_delete": _("🤕 Ma'lumotlar o'chirildi!\nYana qo'shishni hohlasangiz\n/add komondasini ustiga bosing!"),"not_show": _("Ko'rsatilmagan")}
+
+
 
 class Command(BaseCommand):
+    
+    # Define a few command handlers. These usually take the two arguments update and
+    # context.
+    async def start(self,update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Send a message when the command /start is issued.""" 
+        user_data = update.effective_user
+        await update.message.reply_text(f'{ADD_QUESTIONS["hi"]}')
 
-    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Inform user about what this bot can do"""
-        await update.message.reply_text(
-            "Please select /poll to get a Poll, /quiz to get a Quiz or /preview"
-            " to generate a preview for your poll"
-        )
+        context.user_data[STATE] = STATE_ADD
 
-
-    async def poll(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Sends a predefined poll"""
-        questions = ["Good", "Really good", "Fantastic", "Great"]
-        message = await context.bot.send_poll(
-            update.effective_chat.id,
-            "How are you?",
-            questions,
-            is_anonymous=False,
-            allows_multiple_answers=True,
-        )
-        # Save some info about the poll the bot_data for later use in receive_poll_answer
-        payload = {
-            message.poll.id: {
-                "questions": questions,
-                "message_id": message.message_id,
-                "chat_id": update.effective_chat.id,
-                "answers": 0,
-            }
-        }
-        context.bot_data.update(payload)
+    async def lang_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await update.message.reply_text('Kitob ')
 
 
-    async def receive_poll_answer(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Summarize a users poll vote"""
-        answer = update.poll_answer
-        answered_poll = context.bot_data[answer.poll_id]
-        try:
-            questions = answered_poll["questions"]
-        # this means this poll answer update is from an old poll, we can't do our answering then
-        except KeyError:
-            return
-        selected_options = answer.option_ids
-        answer_string = ""
-        for question_id in selected_options:
-            if question_id != selected_options[-1]:
-                answer_string += questions[question_id] + " and "
-            else:
-                answer_string += questions[question_id]
-        await context.bot.send_message(
-            answered_poll["chat_id"],
-            f"{update.effective_user.mention_html()} feels {answer_string}!",
-            parse_mode=ParseMode.HTML,
-        )
-        answered_poll["answers"] += 1
-        # Close poll after three participants voted
-        if answered_poll["answers"] == TOTAL_VOTER_COUNT:
-            await context.bot.stop_poll(answered_poll["chat_id"], answered_poll["message_id"])
+    async def inline_query(self,update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle the inline query. This is run when you type: @botusername <query>"""
+        query = update.inline_query.query
+        print(update.inline_query.from_user.id)
+        results = []
+        if not query:  # empty query should not be handled
+            books = await sync_to_async(lambda : [row for row in Books.objects.all()])()
+            for b in books:
+                results.append(
+                    InlineQueryResultArticle(
+                        id=b.id,
+                        title=b.name,
+                        input_message_content=InputTextMessageContent(b.name),
+                    )
+                )
+            await update.inline_query.answer(results)
 
 
-    async def quiz(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Send a predefined poll"""
-        questions = ["1", "2", "4", "20"]
-        message = await update.effective_message.reply_poll(
-            "How many eggs do you need for a cake?", questions, type=Poll.QUIZ, correct_option_id=2
-        )
-        # Save some info about the poll the bot_data for later use in receive_quiz_answer
-        payload = {
-            message.poll.id: {"chat_id": update.effective_chat.id, "message_id": message.message_id}
-        }
-        context.bot_data.update(payload)
+        books = await sync_to_async(lambda : [row for row in Books.objects.values('id','name','category__name',
+                                                                                  'language__lang','price','content','publish_year').filter(name__startswith=query)])()
+
+        for b in books:
+            results.append(
+                InlineQueryResultArticle(
+                    id=b['id'],
+                    title=f"{b['name']}",
+                    input_message_content=InputTextMessageContent(f"Kitob nomi: {b['name']}\nKategorya nomi: {b['category__name']}\nNarxi: {b['price']}")
+                )
+            )
+
+        await update.inline_query.answer(results)
 
 
-    async def receive_quiz_answer(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Close quiz after three participants took it"""
-        # the bot can receive closed poll updates we don't care about
-        if update.poll.is_closed:
-            return
-        if update.poll.total_voter_count == TOTAL_VOTER_COUNT:
-            try:
-                quiz_data = context.bot_data[update.poll.id]
-            # this means this poll answer update is from an old poll, we can't stop it then
-            except KeyError:
-                return
-            await context.bot.stop_poll(quiz_data["chat_id"], quiz_data["message_id"])
-
-
-    async def preview(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Ask user to create a poll and display a preview of it"""
-        # using this without a type lets the user chooses what he wants (quiz or poll)
-        button = [[KeyboardButton("Press me!", request_poll=KeyboardButtonPollType())]]
-        message = "Press the button to let the bot generate a preview for your poll"
-        # using one_time_keyboard to hide the keyboard
-        await update.effective_message.reply_text(
-            message, reply_markup=ReplyKeyboardMarkup(button, one_time_keyboard=True)
-        )
-
-
-    async def receive_poll(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """On receiving polls, reply to it by a closed poll copying the received poll"""
-        actual_poll = update.effective_message.poll
-        # Only need to set the question and options, since all other parameters don't matter for
-        # a closed poll
-        await update.effective_message.reply_poll(
-            question=actual_poll.question,
-            options=[o.text for o in actual_poll.options],
-            # with is_closed true, the poll/quiz is immediately closed
-            is_closed=True,
-            reply_markup=ReplyKeyboardRemove(),
-        )
-
-
-    async def help_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Display a help message"""
-        await update.message.reply_text("Use /quiz, /poll or /preview to test this bot.")
-
-
-    def handle(self,*args,**kwargs) -> None:
-        """Run bot."""
+    def handle(self,*args,**options) -> None:
+        """Run the bot."""
         # Create the Application and pass it your bot's token.
         application = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
+
+        # on different commands - answer in Telegram
         application.add_handler(CommandHandler("start", self.start))
-        application.add_handler(CommandHandler("poll", self.poll))
-        application.add_handler(CommandHandler("quiz", self.quiz))
-        application.add_handler(CommandHandler("preview", self.preview))
-        application.add_handler(CommandHandler("help", self.help_handler))
-        application.add_handler(MessageHandler(filters.POLL, self.receive_poll))
-        application.add_handler(PollAnswerHandler(self.receive_poll_answer))
-        application.add_handler(PollHandler(self.receive_quiz_answer))
+        application.add_handler(CommandHandler('add', self.lang_handler))
+
+        # on non command i.e message - echo the message on Telegram
+        application.add_handler(InlineQueryHandler(self.inline_query))
 
         # Run the bot until the user presses Ctrl-C
         application.run_polling()
-
-
-
-
-
-
-
-
-
-
-
-
 
