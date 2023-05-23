@@ -33,18 +33,18 @@ class Books(models.Model):
     language = models.ForeignKey(Language, on_delete=models.RESTRICT)
 
     price = models.DecimalField(max_digits=12, decimal_places=2)
-    photo = models.ImageField(upload_to='books_photos')
+    photo = models.ImageField(upload_to='books/')
     status = models.IntegerField(choices=(
         (STATUS_NEW, 'Yangi'),
         (STATUS_PUBLISHED, 'Qabul qilingan'),
         (STATUS_REJECTED, 'Inkor qiligan')
     ))
-    rating_stars = models.IntegerField()
-    rating_count = models.IntegerField()
+    rating_stars = models.IntegerField(default=0)
+    rating_count = models.IntegerField(default=0)
     availability = models.BooleanField(default=False)
-    read = models.IntegerField()
-    reading = models.IntegerField()
-    will_read = models.IntegerField()
+    read = models.IntegerField(default=0)
+    reading = models.IntegerField(default=0)
+    will_read = models.IntegerField(default=0)
     publish_year = models.IntegerField(blank=True, null=True, default=None)
     added_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
