@@ -1,0 +1,229 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-06-08 15:33+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\bookstore\management\commands\bot.py:68
+msgid "Til o`zgartirildi"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:70
+msgid "Kitob nomini kiriting!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:70
+msgid "Kitobga ta'rif bering!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:71
+msgid "Kitob rasmini jo'nating!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:71
+msgid "Kitob rasmini kiritasizmi?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:72
+msgid "Kitob narxini kiriting!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:72
+msgid "Kitobning statusini tanlang!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:73
+msgid "Kitob chop qilingan yilni kiriting!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:73
+msgid "Chop qilingan yili bormi?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:74
+msgid "Kitob kategoriyasi?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:74
+msgid "Kitob chop qilingan til?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:75
+msgid "Chop qilingan davlati?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:75
+msgid "Kitob aftorini tanlang!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:76
+msgid "Yana Avtor qo'shasizmi?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:76
+msgid "Ma'lumotlarni saqlaysizmi?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:76
+msgid "📁 Ma'lumotlarni saqlash"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:77
+msgid ""
+"Ma'lumotlarni muvofaqiyatli to'ldirdingiz!\n"
+"Malumotlarni saqlash uchun pastdagi tugmani bosing!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:78
+msgid "Muvofaqiyatli!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:78
+msgid "Kerakli tilni tanlang!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:80
+msgid "Hurmatli foydalanuvchi oldin /start buyrug'ini kiriiting"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:80
+msgid ""
+"Hurmatli foydalanuvchi siz noto'g'ri formatda ma'lumot kirityapsiz iltimos "
+"malumotni to'g'ri kiriting"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:82
+msgid ""
+"Kitob narxining eng kichik qiymati: 1000\n"
+"Iltimos kattaroq summa kiriting!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:84
+msgid ""
+"Iltimos harf va belgi aralashtirmasdan\n"
+"Faqat son kiriting! Misol uchun: 23500"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:86
+msgid ""
+"Iltimos harf va belgi aralashtirmasdan\n"
+"Faqat raqamlar kiriting!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:87
+msgid ""
+"Iltimos yil YYYY formatda kiriting\n"
+"Misol uchun: \n"
+"2020"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:88
+msgid ""
+"Siz kiritgan yil hozirgi yildan katta bo'lmasligi kerak!\n"
+"Iltimos qayta urining"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:89
+msgid "Ha"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:89
+msgid "Yo'q"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:89
+msgid "Yangi"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:89
+msgid "Qabul qilingan"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:89
+msgid "Inkor qilingan"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:91
+msgid "Kotob ma'lumotlari"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:91
+msgid "Kitob nomi"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:92
+msgid "Kitob ta'rifi"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:92
+msgid "Kitob narxi"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:93
+msgid "Kitob statusi raqami"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:93
+msgid "Kitob chop qilingan yili"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:94
+msgid "Kitob kategoriya"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:94
+msgid "Kitob chiqarilgan til"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:95
+msgid "Kitob chiqarilgan davlat"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:95
+msgid "Kitob aftorlari"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:96
+msgid "Ko'rsatilgan ma'lumotlarni saqlaysizmi?"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:96
+msgid ""
+"😅 Ma'lumot muvofaqiyatli saqlandi!\n"
+"Yana qo'shishni hohlasangiz\n"
+"/add komondasini ustiga bosing!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:97
+msgid ""
+"🤕 Ma'lumotlar o'chirildi!\n"
+"Yana qo'shishni hohlasangiz\n"
+"/add komondasini ustiga bosing!"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:97
+msgid "Ko'rsatilmagan"
+msgstr ""
+
+#: .\bookstore\management\commands\bot.py:124
+#, python-brace-format
+msgid "Assalom alaykum {user_data.full_name} bo`timizga hush kelibsiz."
+msgstr ""
+
+#: .\bookstore\views.py:11
+msgid "Ok"
+msgstr ""

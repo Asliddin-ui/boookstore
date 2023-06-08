@@ -5,6 +5,11 @@ from django.shortcuts import HttpResponse, Http404
 from .models import *
 from django.db.models import Q, F, Avg, Count, Max, Min, Case, OuterRef, Subquery, Value, When, Sum
 from django.db.models.functions import Length, Left
+from django.utils.translation import gettext_lazy as _
+
+def index(request):
+    return HttpResponse(_('Ok'))
+
 
 def categories(request, id):
 

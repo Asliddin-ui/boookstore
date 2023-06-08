@@ -21,9 +21,11 @@ from django.core.management import BaseCommand
 from asgiref.sync import sync_to_async
 from bookstore.models import Authors, Books, Category, Country, Language
 from users.models import Users
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language, gettext_lazy as _, activate
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup,InlineQueryResultArticle, InputTextMessageContent, Update, __version__ as TG_VER
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler,InlineQueryHandler, MessageHandler, filters
+from users.models import Users
+
 
 try:
     from telegram import __version_info__
@@ -61,8 +63,14 @@ STATE_ADD_LANGUAGE = 'book-add-language'
 STATE_ADD_AUTHOR = 'book-add-author'
 STATE_SAVE = "book-save"
 
-ADD_QUESTIONS = {"hi": _("Salom botimizga xush kelibsiz!\nKitob qo'shish uchun /add buyrugini kiriting")
-                ,"name":_("Kitob nomini kiriting!"), "content":_("Kitobga ta'rif bering!"),
+
+
+LANGUAGE = {'change': _('Til o`zgartirildi'),
+            'choose_language': _('Foydalanish uchun tilni tanlang')}
+
+USER = {'choose': _('Quyidagi menuni tanlang!!!, tilni o`zgartirish uchun /language buyrug`ini kiritng. Kitob qo`shish uchun /add buyrug`ini jo`nating')}
+
+ADD_QUESTIONS = {"name":_("Kitob nomini kiriting!"), "content":_("Kitobga ta'rif bering!"),
                   "photo":_("Kitob rasmini jo'nating!"), "photo1":_("Kitob rasmini kiritasizmi?"),
                   "price":_("Kitob narxini kiriting!"), "status":_("Kitobning statusini tanlang!"),
                   "publish_year":_("Kitob chop qilingan yilni kiriting!"), "publish_year1":_("Chop qilingan yili bormi?"),
@@ -98,11 +106,55 @@ class Command(BaseCommand):
     # Define a few command handlers. These usually take the two arguments update and
     # context.
     async def start(self,update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Send a message when the command /start is issued.""" 
+        """Send a message when the command /start is issued."""  
         user_data = update.effective_user
-        await update.message.reply_text(f'{ADD_QUESTIONS["hi"]}')
-
+        btn=[]
+        try:
+            user = await Users.objects.aget(telegram_id = user_data.id)
+            await update.message.reply_text(f"{USER['choose']}")
+        except Users.DoesNotExist:
+            user = await Users.objects.acreate(
+                telegram_id = user_data.id,
+                full_name = user_data.full_name,
+                language = 'uz'
+            )
+            activate(user.language)
+            for b in settings.LANGUAGES:
+                btn.append(
+                            InlineKeyboardButton(b[1], callback_data=b[0])
+                        )
+            await update.message.reply_text(f'Assalom alaykum {user_data.full_name} bo`timizga hush kelibsiz.'
+                                            f'\nFoydalanish uchun tilni tanlang', reply_markup=InlineKeyboardMarkup(
+                                                [
+                                                    [btn[0], btn[1]],
+                                                    [btn[2]]
+                                                ]
+                                                
+                                            ))
         context.user_data[STATE] = STATE_ADD
+
+    async def lang_handler(self, update:Update, context: ContextTypes.DEFAULT_TYPE)-> None:
+        user = await Users.objects.aget(telegram_id = update.effective_user.id)
+        query = update.callback_query.data
+        print(update.effective_user.id)
+        user.language = query
+        await user.asave()
+        activate(user.language)
+        await update.callback_query.answer(f"{LANGUAGE['change']}")
+        return
+
+    async def change_language(self, update:Update, context: ContextTypes.DEFAULT_TYPE) ->None:
+        btn = []
+        for b in settings.LANGUAGES:
+                btn.append(
+                            InlineKeyboardButton(b[1], callback_data=b[0])
+                        )
+        await update.message.reply_text(f'{LANGUAGE["choose_language"]}', reply_markup=InlineKeyboardMarkup(
+                                            [                                                    
+                                                [btn[0], btn[1]],
+                                                [btn[2]]
+                                            ]            
+                                        ))
 
     async def add_name_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         state = context.user_data.get(STATE, '')
@@ -415,6 +467,8 @@ class Command(BaseCommand):
 
         # on different commands - answer in Telegram
         application.add_handler(CommandHandler("start", self.start))
+        application.add_handler(CommandHandler("language", self.change_language))
+        application.add_handler(CallbackQueryHandler(self.lang_handler, '^\w{2}$'))
         application.add_handler(CommandHandler('add', self.add_name_handler))
         application.add_handler(MessageHandler(filters.TEXT | filters.PHOTO & ~filters.COMMAND, self.add_country))
         application.add_handler(CallbackQueryHandler(self.book_add_photo_handler,"^book_add_photo_(\d+)$"))
