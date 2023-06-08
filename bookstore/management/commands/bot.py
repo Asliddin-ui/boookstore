@@ -116,6 +116,7 @@ class Command(BaseCommand):
             user = await Users.objects.acreate(
                 telegram_id = user_data.id,
                 full_name = user_data.full_name,
+                username = user_data.id,
                 language = 'uz'
             )
             activate(user.language)
